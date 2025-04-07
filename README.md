@@ -8,11 +8,7 @@ La forma más sencilla de utilizar Pesito es usando Docker:
 
 ```bash
 # Opción 1: Docker Run
-docker run -d -p 3000:3000 -v $(pwd)/data:/app/db --name pesito orellanamatias/pesito:latest
-
-# En Windows PowerShell:
-docker run -d -p 3000:3000 -v ${PWD}/data:/app/db --name pesito orellanamatias/pesito:latest
-```
+docker run -d -p 3000:3000 orellanamatias/pesito
 
 ⚠️ **Importante**: El mapeo de puertos con `-p 3000:3000` es obligatorio para poder acceder a la aplicación. El primer número puede cambiarse si necesitas usar otro puerto en tu máquina host.
 
