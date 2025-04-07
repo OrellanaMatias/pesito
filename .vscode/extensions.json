@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "formulahendry.auto-rename-tag",
+    "bradlc.vscode-tailwindcss",
+    "wix.vscode-import-cost",
+    "ms-vsliveshare.vsliveshare",
+    "christian-kohler.path-intellisense",
+    "mikestead.dotenv",
+    "VisualStudioExptTeam.vscodeintellicode"
+  ]
+}
