@@ -74,7 +74,7 @@ docker-compose up -d
 
 - Frontend: React con TypeScript, Tailwind CSS
 - Backend: Node.js con Express
-- Base de datos: SQLite
+- Base de datos: MySQL
 - IA: Google Gemini API
 
 ## Configuración de la IA (opcional)
