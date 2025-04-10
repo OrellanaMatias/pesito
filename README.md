@@ -1,87 +1,83 @@
-# Pesito - Aplicación de Finanzas Personales
+# Pesito - Gestor de Finanzas Personales
 
-Pesito es una aplicación moderna de finanzas personales que te permite gestionar tus gastos e ingresos a través de una interfaz de chat natural, utilizando inteligencia artificial para categorizar automáticamente tus transacciones.
+## Configuración Centralizada
 
-## Instalación con Docker (Recomendado)
+Este proyecto ahora utiliza un sistema de configuración centralizado que facilita el despliegue en diferentes entornos.
 
-La forma más sencilla de utilizar Pesito es usando Docker:
+### Estructura del Proyecto
 
-```bash
-# Opción 1: Docker Run
-docker run -d -p 3000:3000 orellanamatias/pesito
-
-⚠️ **Importante**: El mapeo de puertos con `-p 3000:3000` es obligatorio para poder acceder a la aplicación. El primer número puede cambiarse si necesitas usar otro puerto en tu máquina host.
-
-O usando Docker Compose:
-
-```bash
-# Opción 2: Docker Compose
-# Crear un archivo docker-compose.yml con este contenido:
-version: '3.8'
-
-services:
-  pesito:
-    image: orellanamatias/pesito:latest
-    container_name: pesito
-    restart: always
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./data:/app/db
-    environment:
-      - NODE_ENV=production
-
-# Luego ejecutar:
-docker-compose up -d
+```
+pesito/
+├── .env                 # Variables de entorno centralizadas
+├── .env.example         # Ejemplo de configuración
+├── setup-env.js         # Script para generar archivos .env
+├── package.json         # Scripts y dependencias raíz
+├── docker-compose.yml   # Configuración de Docker
+├── client/              # Frontend (React + Vite)
+│   ├── src/             # Código fuente del frontend
+│   └── ...
+└── server/              # Backend (Node.js)
+    ├── src/             # Código fuente del backend
+    └── ...
 ```
 
-Una vez instalado, accede a la aplicación en: http://localhost:3000
+## Instrucciones de Instalación
 
-## Características
-
-- 💬 Registra transacciones a través de una interfaz de chat natural
-- 🧠 Utiliza IA (Google Gemini) para categorizar automáticamente transacciones
-- 📊 Visualiza resúmenes financieros con gráficos interactivos
-- 🏷️ Administra categorías personalizadas para gastos e ingresos
-- 🌙 Soporte para tema claro y oscuro
-- 💲 Cambio de moneda (USD/ARS)
-- 📱 Diseño responsivo para móviles y escritorio
-
-## Persistencia de datos
-
-Todos tus datos se almacenan localmente en el directorio `./data` que está montado como volumen en el contenedor Docker. Esto asegura que tus datos persistan entre reinicios del contenedor.
-
-## Actualización
-
-Para actualizar a la última versión:
-
+1. Clona el repositorio:
 ```bash
-docker pull orellanamatias/pesito:latest
-docker stop pesito
-docker rm pesito
-docker run -d -p 3000:3000 -v $(pwd)/data:/app/db --name pesito orellanamatias/pesito:latest
+git clone https://github.com/tu-usuario/pesito.git
+cd pesito
 ```
 
-O si usas Docker Compose:
-
+2. Configura las variables de entorno:
 ```bash
-docker-compose pull
-docker-compose down
-docker-compose up -d
+# Copia el archivo de ejemplo
+cp .env.example .env
+
+# Edita .env con tu configuración
+# Especialmente la variable HOST_IP con tu IP o dominio
 ```
 
-## Tecnologías
+3. Instala las dependencias y configura el entorno:
+```bash
+npm install
+npm run setup-env
+```
 
-- Frontend: React con TypeScript, Tailwind CSS
-- Backend: Node.js con Express
-- Base de datos: MySQL
-- IA: Google Gemini API
+4. Inicia los servicios:
+```bash
+npm start
+```
 
-## Configuración de la IA (opcional)
+## Comandos Disponibles
 
-Para utilizar las funciones de inteligencia artificial:
+- `npm run setup-env`: Genera los archivos .env para cliente y servidor
+- `npm start`: Configura el entorno y levanta los contenedores
+- `npm run stop`: Detiene todos los contenedores
+- `npm run restart`: Reinicia todos los contenedores
+- `npm run logs`: Muestra logs de todos los servicios
+- `npm run frontend-logs`: Muestra solo logs del frontend
+- `npm run backend-logs`: Muestra solo logs del backend
+- `npm run mysql-logs`: Muestra solo logs de la base de datos
 
-1. Obtén una API key de [Google AI Studio](https://aistudio.google.com/app/apikey)
-2. En la aplicación, ve a Configuración > Integración con IA
-3. Ingresa tu API key y haz clic en "Probar API key"
-4. Activa el interruptor "Usar IA para clasificar transacciones"
+## Adaptación a Diferentes Entornos
+
+Para desplegar la aplicación en un nuevo servidor, simplemente:
+
+1. Actualiza la variable `HOST_IP` en el archivo `.env` con la IP o dominio del nuevo servidor
+2. Ejecuta `npm run setup-env` para regenerar los archivos de configuración
+3. Ejecuta `npm start` para levantar los servicios
+
+## Desarrollo Local
+
+Para desarrollo local, configura `HOST_IP=localhost` en el archivo `.env`.
+
+## Contribuir
+
+Si deseas contribuir al proyecto, por favor:
+
+1. Haz un fork del repositorio
+2. Crea una rama para tu funcionalidad (`git checkout -b mi-nueva-funcionalidad`)
+3. Realiza tus cambios y haz commit (`git commit -am 'Añade nueva funcionalidad'`)
+4. Sube tus cambios (`git push origin mi-nueva-funcionalidad`)
+5. Crea un Pull Request

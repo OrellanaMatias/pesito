@@ -4,12 +4,12 @@ services:
     container_name: pesito-mysql
     restart: always
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=pesito
-      - MYSQL_USER=pesito
-      - MYSQL_PASSWORD=pesito
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-password}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-pesito}
+      - MYSQL_USER=${MYSQL_USER:-pesito}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-pesito}
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
@@ -23,16 +23,17 @@ services:
     container_name: pesito-backend
     restart: always
     ports:
-      - "3000:3000"
+      - "${BACKEND_PORT:-3000}:3000"
     environment:
       - PORT=3000
       - HOST=0.0.0.0
-      - NODE_ENV=production
+      - NODE_ENV=${NODE_ENV:-production}
       - DB_HOST=mysql
       - DB_PORT=3306
-      - DB_USER=pesito
-      - DB_PASSWORD=pesito
-      - DB_NAME=pesito
+      - DB_USER=${MYSQL_USER:-pesito}
+      - DB_PASSWORD=${MYSQL_PASSWORD:-pesito}
+      - DB_NAME=${MYSQL_DATABASE:-pesito}
+      - HOST_IP=${HOST_IP:-localhost}
     depends_on:
       - mysql
     networks:
@@ -45,14 +46,16 @@ services:
     container_name: pesito-frontend
     restart: always
     ports:
-      - "5173:5173"
+      - "${FRONTEND_PORT:-5173}:5173"
     volumes:
       - ./client:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://54.175.70.20:3000/api
       - HOST=0.0.0.0
       - PORT=5173
+      - HOST_IP=${HOST_IP:-localhost}
+      - BACKEND_PORT=${BACKEND_PORT:-3000}
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
       - backend
     networks:

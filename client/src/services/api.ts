@@ -1,9 +1,21 @@
 import { Transaction, Category, FinancialSummary, GeminiTestResponse } from '../types';
 
-// Configurar la URL de la API para que siempre use la IP del VPS
-let API_URL = 'http://54.175.70.20:3000/api';
+// Configurar la URL de la API de forma dinámica
+let API_URL = '';
 
-console.log('API URL configurada:', API_URL);
+// Detectar automáticamente el host y construir la URL de la API
+if (typeof window !== 'undefined') {
+  // Usar la ruta relativa para aprovechar el proxy configurado en Vite
+  API_URL = '/api';
+  
+  // Si estamos en desarrollo y necesitamos una URL específica
+  if (import.meta.env.VITE_API_URL) {
+    API_URL = import.meta.env.VITE_API_URL;
+  }
+  
+  // Registrar la URL de la API para depuración
+  console.log('API URL configurada:', API_URL);
+}
 
 async function fetchApi<T>(
   endpoint: string, 
@@ -43,7 +55,7 @@ async function fetchApi<T>(
   } catch (error: any) {
     if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
       throw new Error(
-        `Error de conexión: No se pudo conectar al servidor en ${API_URL}. ` +
+        `Error de conexión: No se pudo conectar al servidor. ` +
         'Verifica que el servidor esté en ejecución.'
       );
     }
