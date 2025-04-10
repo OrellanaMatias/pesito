@@ -1,51 +1,50 @@
-import { db } from '../database/setup.js';
+import { query } from '../database/mysql-setup.js';
 import { parseTransactionText } from '../utils/transactionParser.js';
 
-export const getAllTransactions = (req, res) => {
-  const query = `
-    SELECT t.*, c.name as category_name 
-    FROM transactions t
-    LEFT JOIN categories c ON t.category_id = c.id
-    ORDER BY t.created_at DESC
-  `;
-  
-  db.all(query, (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    return res.json(rows);
-  });
+export const getAllTransactions = async (req, res) => {
+  try {
+    const sql = `
+      SELECT t.*, c.name as category_name 
+      FROM transactions t
+      LEFT JOIN categories c ON t.category_id = c.id
+      ORDER BY t.created_at DESC
+    `;
+    
+    const transactions = await query(sql);
+    return res.json(transactions);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
-export const createTransaction = (req, res) => {
+export const createTransaction = async (req, res) => {
   const { amount, description, type, category_id } = req.body;
   
   if (!amount || !type) {
     return res.status(400).json({ error: 'Monto y tipo son obligatorios' });
   }
   
-  const query = `
-    INSERT INTO transactions (amount, description, type, category_id)
-    VALUES (?, ?, ?, ?)
-  `;
-  
-  db.run(query, [amount, description, type, category_id], function(err) {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+  try {
+    const insertSql = `
+      INSERT INTO transactions (amount, description, type, category_id)
+      VALUES (?, ?, ?, ?)
+    `;
     
-    db.get(`
+    const result = await query(insertSql, [amount, description, type, category_id]);
+    const insertId = result.insertId;
+    
+    const selectSql = `
       SELECT t.*, c.name as category_name 
       FROM transactions t
       LEFT JOIN categories c ON t.category_id = c.id
       WHERE t.id = ?
-    `, [this.lastID], (err, row) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      return res.status(201).json(row);
-    });
-  });
+    `;
+    
+    const transaction = await query(selectSql, [insertId]);
+    return res.status(201).json(transaction[0]);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 };
 
 export const processTransactionText = async (req, res) => {
@@ -100,38 +99,34 @@ export const processTransactionText = async (req, res) => {
       });
     }
     
-    const insertQuery = `
+    const insertSql = `
       INSERT INTO transactions (amount, description, type, category_id)
       VALUES (?, ?, ?, ?)
     `;
     
-    db.run(insertQuery, [
+    const insertResult = await query(insertSql, [
       transactionData.amount,
       transactionData.description,
       transactionData.type,
       transactionData.category_id
-    ], function(err) {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      
-      db.get('SELECT name FROM categories WHERE id = ?', [transactionData.category_id], (err, category) => {
-        if (err) {
-          console.error('Error al obtener categoría:', err);
-        }
-        
-        const result = {
-          id: this.lastID,
-          ...transactionData,
-          category_name: category ? category.name : null
-        };
-        
-        return res.status(201).json({
-          transaction: result,
-          message: `${transactionData.type === 'income' ? 'Ingreso' : 'Gasto'} registrado correctamente`,
-          ai_processed: useAI && geminiApiKey ? true : false
-        });
-      });
+    ]);
+    
+    const insertId = insertResult.insertId;
+    
+    const categorySql = 'SELECT name FROM categories WHERE id = ?';
+    const categories = await query(categorySql, [transactionData.category_id]);
+    const category = categories.length > 0 ? categories[0] : null;
+    
+    const result = {
+      id: insertId,
+      ...transactionData,
+      category_name: category ? category.name : null
+    };
+    
+    return res.status(201).json({
+      transaction: result,
+      message: `${transactionData.type === 'income' ? 'Ingreso' : 'Gasto'} registrado correctamente`,
+      ai_processed: useAI && geminiApiKey ? true : false
     });
   } catch (error) {
     console.error('Error al procesar transacción:', error);
@@ -139,18 +134,19 @@ export const processTransactionText = async (req, res) => {
   }
 };
 
-export const getTransactionsSummary = (req, res) => {
-  db.get(`
-    SELECT 
-      COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income,
-      COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense
-    FROM transactions
-  `, (err, totals) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
+export const getTransactionsSummary = async (req, res) => {
+  try {
+    const totalsSql = `
+      SELECT 
+        COALESCE(SUM(CASE WHEN type = 'income' THEN amount ELSE 0 END), 0) as total_income,
+        COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) as total_expense
+      FROM transactions
+    `;
     
-    db.all(`
+    const totalsResults = await query(totalsSql);
+    const totals = totalsResults[0];
+    
+    const expensesByCategorySql = `
       SELECT 
         c.id, 
         c.name, 
@@ -161,37 +157,35 @@ export const getTransactionsSummary = (req, res) => {
       WHERE t.type = 'expense'
       GROUP BY c.id, c.name
       ORDER BY total DESC
-    `, (err, expensesByCategory) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      
-      db.all(`
-        SELECT 
-          c.id, 
-          c.name, 
-          SUM(t.amount) as total,
-          COUNT(t.id) as count
-        FROM transactions t
-        JOIN categories c ON t.category_id = c.id
-        WHERE t.type = 'income'
-        GROUP BY c.id, c.name
-        ORDER BY total DESC
-      `, (err, incomesByCategory) => {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        
-        const balance = totals.total_income - totals.total_expense;
-        
-        res.json({
-          balance,
-          total_income: totals.total_income,
-          total_expense: totals.total_expense,
-          expenses_by_category: expensesByCategory,
-          incomes_by_category: incomesByCategory
-        });
-      });
+    `;
+    
+    const expensesByCategory = await query(expensesByCategorySql);
+    
+    const incomesByCategorySql = `
+      SELECT 
+        c.id, 
+        c.name, 
+        SUM(t.amount) as total,
+        COUNT(t.id) as count
+      FROM transactions t
+      JOIN categories c ON t.category_id = c.id
+      WHERE t.type = 'income'
+      GROUP BY c.id, c.name
+      ORDER BY total DESC
+    `;
+    
+    const incomesByCategory = await query(incomesByCategorySql);
+    
+    const balance = totals.total_income - totals.total_expense;
+    
+    res.json({
+      balance,
+      total_income: totals.total_income,
+      total_expense: totals.total_expense,
+      expenses_by_category: expensesByCategory,
+      incomes_by_category: incomesByCategory
     });
-  });
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
 }; 

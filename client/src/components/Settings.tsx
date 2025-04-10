@@ -83,8 +83,15 @@ export function Settings() {
     setResetDatabaseLoading(true);
     setResetDatabaseResult({});
     
+    let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+    
+    // Si estamos en el navegador del cliente y la URL contiene "backend", reemplazarla por "localhost"
+    if (typeof window !== 'undefined' && API_URL.includes('backend')) {
+      API_URL = API_URL.replace('backend', 'localhost');
+    }
+    
     try {
-      const response = await fetch('http://localhost:3000/api/admin/reset-database', {
+      const response = await fetch(`${API_URL}/admin/reset-database`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

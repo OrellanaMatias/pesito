@@ -1,4 +1,4 @@
-import { db } from '../database/setup.js';
+import { query } from '../database/mysql-setup.js';
 
 /**
  * Prueba la conexión con la API de Gemini usando la API key proporcionada
@@ -80,16 +80,7 @@ export const processTransactionWithGemini = async (req, res) => {
   }
   
   try {
-    const getCategories = () => {
-      return new Promise((resolve, reject) => {
-        db.all('SELECT * FROM categories ORDER BY type, name', (err, categories) => {
-          if (err) reject(err);
-          else resolve(categories);
-        });
-      });
-    };
-    
-    const categories = await getCategories();
+    const categories = await query('SELECT * FROM categories ORDER BY type, name');
     
     if (categories.length === 0) {
       return res.status(400).json({

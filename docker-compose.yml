@@ -1,14 +1,66 @@
-version: '3.8'
-
 services:
-  pesito:
-    image: orellanamatias/pesito:latest
-    container_name: pesito
+  mysql:
+    image: mysql:8.0
+    container_name: pesito-mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=pesito
+      - MYSQL_USER=pesito
+      - MYSQL_PASSWORD=pesito
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - pesito-net
+    command: --default-authentication-plugin=mysql_native_password
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: pesito-backend
     restart: always
     ports:
       - "3000:3000"
-    volumes:
-      - ./data:/app/db
     environment:
       - PORT=3000
+      - HOST=0.0.0.0
       - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USER=pesito
+      - DB_PASSWORD=pesito
+      - DB_NAME=pesito
+    depends_on:
+      - mysql
+    networks:
+      - pesito-net
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: pesito-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://backend:3000/api
+      - HOST=0.0.0.0
+      - PORT=5173
+    depends_on:
+      - backend
+    networks:
+      - pesito-net
+
+networks:
+  pesito-net:
+    driver: bridge
+
+volumes:
+  mysql-data:

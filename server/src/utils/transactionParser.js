@@ -1,11 +1,11 @@
-import { db } from '../database/setup.js';
+import { query } from '../database/mysql-setup.js';
 
 /**
  * Analiza un mensaje de texto para identificar una transacción financiera
  * @param {string} text - Texto a analizar (ej: "Gasté 300 en supermercado")
  * @returns {Object|null} - Datos de la transacción o null si no se pudo analizar
  */
-export const parseTransactionText = (text) => {
+export const parseTransactionText = async (text) => {
   const normalizedText = text.toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
@@ -91,25 +91,23 @@ export const parseTransactionText = (text) => {
     description = type === 'income' ? 'Ingreso sin especificar' : 'Gasto sin especificar';
   }
   
-  return new Promise((resolve) => {
-    findBestCategory(description, type, (categoryId) => {
-      resolve({
-        amount,
-        description: description.charAt(0).toUpperCase() + description.slice(1),
-        type,
-        category_id: categoryId
-      });
-    });
-  });
+  const categoryId = await findBestCategory(description, type);
+  
+  return {
+    amount,
+    description: description.charAt(0).toUpperCase() + description.slice(1),
+    type,
+    category_id: categoryId
+  };
 };
 
 /**
  * Encuentra la mejor categoría para una descripción de transacción
  * @param {string} description - Descripción de la transacción
  * @param {string} type - Tipo de transacción ('income' o 'expense')
- * @param {function} callback - Función a llamar con el ID de categoría encontrado
+ * @returns {Promise<number>} - Promise que resuelve al ID de la categoría
  */
-const findBestCategory = (description, type, callback) => {
+const findBestCategory = async (description, type) => {
   const expenseCategoryKeywords = {
     // Comida
     'comida': 1, 'restaurant': 1, 'comer': 1, 'almuerzo': 1, 'cena': 1, 
@@ -178,14 +176,20 @@ const findBestCategory = (description, type, callback) => {
   }
   
   if (!bestCategory) {
-    bestCategory = type === 'expense' ? 8 : 13; // 8 = Otros gastos, 13 = Otros ingresos  tiene poco sentido
+    bestCategory = type === 'expense' ? 8 : 13; // 8 = Otros gastos, 13 = Otros ingresos
   }
   
-  db.get('SELECT id FROM categories WHERE id = ? AND type = ?', [bestCategory, type], (err, row) => {
-    if (err || !row) {
-      callback(type === 'expense' ? 8 : 13);
-    } else {
-      callback(bestCategory);
+  try {
+    const sql = 'SELECT id FROM categories WHERE id = ? AND type = ?';
+    const result = await query(sql, [bestCategory, type]);
+    
+    if (result.length === 0) {
+      return type === 'expense' ? 8 : 13;
     }
-  });
+    
+    return bestCategory;
+  } catch (error) {
+    console.error('Error al buscar categoría:', error.message);
+    return type === 'expense' ? 8 : 13;
+  }
 }; 

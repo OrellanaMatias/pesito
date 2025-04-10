@@ -27,20 +27,27 @@ export function Summary() {
   }, []);
 
   const income = transactions
-    .filter(t => t.type === 'income')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t: Transaction) => t.type === 'income')
+    .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0);
   
   const expenses = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((sum, t) => sum + t.amount, 0);
+    .filter((t: Transaction) => t.type === 'expense')
+    .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0);
   
   const balance = income - expenses;
 
+  const formatCurrency = (value: number): string => {
+    const numValue = Number(value);
+    if (isNaN(numValue)) return '0,00';
+    
+    return numValue.toFixed(2).replace('.', ',');
+  };
+
   const expensesByCategory = transactions
-    .filter(t => t.type === 'expense')
-    .reduce((acc, t) => {
+    .filter((t: Transaction) => t.type === 'expense')
+    .reduce((acc: Record<string, number>, t: Transaction) => {
       const catName = t.category_name || 'Sin categoría';
-      acc[catName] = (acc[catName] || 0) + t.amount;
+      acc[catName] = (acc[catName] || 0) + Number(t.amount);
       return acc;
     }, {} as Record<string, number>);
 
@@ -106,7 +113,7 @@ export function Summary() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase font-semibold opacity-80">Ingresos</p>
-                <p className="text-2xl font-bold mt-1">{currencySymbol}{income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-2xl font-bold mt-1">{currencySymbol}{formatCurrency(income)}</p>
               </div>
               <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/50">
                 <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +127,7 @@ export function Summary() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase font-semibold opacity-80">Gastos</p>
-                <p className="text-2xl font-bold mt-1">{currencySymbol}{expenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-2xl font-bold mt-1">{currencySymbol}{formatCurrency(expenses)}</p>
               </div>
               <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/50">
                 <svg className="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -134,7 +141,7 @@ export function Summary() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs uppercase font-semibold opacity-80">Balance</p>
-                <p className="text-2xl font-bold mt-1">{currencySymbol}{balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                <p className="text-2xl font-bold mt-1">{currencySymbol}{formatCurrency(balance)}</p>
               </div>
               <div className="p-2 rounded-full bg-white/80 dark:bg-gray-800/50">
                 <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,9 +173,11 @@ export function Summary() {
                     <div className="flex justify-between text-sm">
                       <span className="font-medium text-gray-700 dark:text-gray-300">{label}</span>
                       <div className="flex items-center">
-                        <span className="text-gray-500 dark:text-gray-400 mr-2">{percentage}%</span>
+                        <span className="text-gray-500 dark:text-gray-400 mr-2">
+                          {!isNaN(percentage) ? `${percentage}%` : '0%'}
+                        </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {currencySymbol}{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {currencySymbol}{formatCurrency(value)}
                         </span>
                       </div>
                     </div>
@@ -250,7 +259,7 @@ export function Summary() {
                       ? 'text-green-600 dark:text-green-400' 
                       : 'text-red-600 dark:text-red-400'
                   }`}>
-                    {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {transaction.type === 'income' ? '+' : '-'}{currencySymbol}{formatCurrency(transaction.amount)}
                   </p>
                 </div>
               ))}

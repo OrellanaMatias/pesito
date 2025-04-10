@@ -8,14 +8,22 @@ const __dirname = dirname(__filename);
 
 // Definir la ruta por defecto dentro del contenedor
 const defaultDbPath = process.env.DB_PATH || join(__dirname, '../../db/pesito.db');
+console.log('Ruta de la base de datos:', defaultDbPath);
 
 // Asegurar que la carpeta de la base de datos exista
 const dbFolder = dirname(defaultDbPath);
 if (!fs.existsSync(dbFolder)) {
+  console.log('Creando carpeta para la base de datos:', dbFolder);
   fs.mkdirSync(dbFolder, { recursive: true });
 }
 
-export const db = new sqlite3.Database(defaultDbPath, (err) => {
+// Configurar la base de datos con opciones para mejorar la estabilidad
+const dbOptions = {
+  timeout: 10000, // Timeout de 10 segundos para operaciones de bloqueo
+  verbose: console.log // Logs detallados para diagnóstico
+};
+
+export const db = new sqlite3.Database(defaultDbPath, dbOptions, (err) => {
   if (err) {
     console.error('Error al conectar con la base de datos', err.message);
   } else {
