@@ -64,7 +64,7 @@ export const processTransactionText = async (req, res) => {
       console.log('Procesando transacción con Gemini...');
       
       try {
-        const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/gemini/process`, {
+        const response = await fetch(`http://54.175.70.20/:${process.env.PORT || 3000}/api/gemini/process`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

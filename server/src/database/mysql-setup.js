@@ -12,7 +12,7 @@ const __dirname = dirname(__filename);
 
 // Leer configuración de la base de datos desde variables de entorno
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || '54.175.70.20',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'pesito',

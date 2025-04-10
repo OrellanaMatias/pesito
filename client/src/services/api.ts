@@ -1,7 +1,7 @@
 import { Transaction, Category, FinancialSummary, GeminiTestResponse } from '../types';
 
 // Configurar la URL de la API según el entorno
-let API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+let API_URL = import.meta.env.VITE_API_URL || 'http://54.175.70.20:3000/api';
 
 // Si estamos en el navegador del cliente y la URL contiene "backend", reemplazarla por "localhost"
 if (typeof window !== 'undefined' && API_URL.includes('backend')) {
