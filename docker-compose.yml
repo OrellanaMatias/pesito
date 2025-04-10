@@ -50,7 +50,7 @@ services:
       - ./client:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://backend:3000/api
+      - VITE_API_URL=http://54.175.70.20:3000/api
       - HOST=0.0.0.0
       - PORT=5173
     depends_on:
