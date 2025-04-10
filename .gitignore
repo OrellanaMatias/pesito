@@ -49,6 +49,17 @@ desktop.ini
 *.swp
 *.swo
 
+# Archivos sensibles - asegurar que los .env estén excluidos pero no los .env.example
+.env
+**/.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production
+**/.env.production
+!.env.example
+!**/.env.example
+
 # Logs
 logs
 *.log
