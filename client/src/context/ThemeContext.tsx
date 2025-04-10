@@ -46,7 +46,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
         return storedCurrency;
       }
     }
-    return 'USD';
+    return 'ARS';
   };
   
   const getInitialGeminiApiKey = (): string => {
