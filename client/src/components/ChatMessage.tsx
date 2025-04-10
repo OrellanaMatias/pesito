@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { ChatMessage as ChatMessageType } from '../types';
 import { useTheme } from '../context/ThemeContext';
 
@@ -8,6 +9,17 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, botAvatar }: ChatMessageProps) {
   const { currencySymbol } = useTheme();
+  const [visible, setVisible] = useState(message.isUser);
+  
+  useEffect(() => {
+    if (!message.isUser) {
+      // Pequeño retraso para que la animación sea perceptible
+      const timer = setTimeout(() => {
+        setVisible(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [message.isUser]);
   
   const formattedTime = new Intl.DateTimeFormat('es', {
     hour: 'numeric',
@@ -30,18 +42,20 @@ export function ChatMessage({ message, botAvatar }: ChatMessageProps) {
         </div>
       )}
       
-      <div 
+      <div
         className={`max-w-[75%] rounded-lg p-3 ${
           message.isUser 
             ? 'bg-blue-500 text-white rounded-br-none' 
             : 'bg-gray-100 dark:bg-gray-700 dark:text-white rounded-bl-none'
-        }`}
+        } ${!message.isUser ? (visible ? 'animate-fadeIn' : 'opacity-0') : ''}`}
       >
-        <div className="text-sm mb-1">{message.text}</div>
+        <div className="text-sm mb-1 min-h-[20px]">
+          {message.text}
+        </div>
         
         {/* Si hay datos de transacción, mostramos un resumen */}
-        {message.transactionData && (
-          <div className="mt-2 p-2 bg-white/10 dark:bg-gray-800/50 rounded-md backdrop-blur-sm text-xs border border-white/20 dark:border-gray-700/50">
+        {message.transactionData && visible && (
+          <div className="mt-2 p-2 bg-white/10 dark:bg-gray-800/50 rounded-md backdrop-blur-sm text-xs border border-white/20 dark:border-gray-700/50 animate-slideUp">
             <div className="font-semibold flex justify-between items-center">
               <span>
                 {message.transactionData.type === 'income' ? 'Ingreso' : 'Gasto'}

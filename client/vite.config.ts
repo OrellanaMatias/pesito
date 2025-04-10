@@ -20,6 +20,13 @@ export default defineConfig(({ mode }) => {
       watch: {
         usePolling: true,
       },
+      // Permitir hosts específicos
+      allowedHosts: [
+        'localhost',
+        '127.0.0.1',
+        'pesito.orellanamatias.com.ar',
+        env.HOST_IP || 'localhost'
+      ],
       proxy: {
         '/api': {
           target: env.NODE_ENV === 'production' 

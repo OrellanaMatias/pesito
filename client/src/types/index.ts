@@ -36,6 +36,7 @@ export interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
   transactionData?: Transaction;
+  isTyping?: boolean;
 }
 
 export type ThemeMode = 'light' | 'dark';
